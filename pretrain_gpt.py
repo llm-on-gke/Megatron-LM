@@ -223,22 +223,7 @@ def train_valid_test_datasets_provider(train_val_test_num_samples, vp_stage=None
 
 
 if __name__ == "__main__":
-    # --- BEGIN FIX ---
-    # Manually set the device before any other CUDA operations to prevent deadlocks.
-    # This reads the LOCAL_RANK environment variable set by torchrun.
-    import os
 
-    try:
-        local_rank = int(os.environ['LOCAL_RANK'])
-        os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
-        os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{local_rank}:1'
-        torch.cuda.set_device(local_rank)
-        print_rank_0(f"--- GEMINI FIX ACTIVE: Rank {os.environ.get('NODE_RANK')} set to device {torch.cuda.current_device()} ---", flush=True) 
-    except KeyError:
-        print_rank_0("Warning: LOCAL_RANK not found. Assuming single-GPU or non-torchrun setup.")
-    except Exception as e:
-        print_rank_0(f"Error setting CUDA device: {e}")
-    # --- END FIX ---
     # Temporary for transition to core datasets
     train_valid_test_datasets_provider.is_distributed = True
 

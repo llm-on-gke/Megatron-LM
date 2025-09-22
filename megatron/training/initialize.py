@@ -317,9 +317,12 @@ def _initialize_distributed(get_embedding_ranks, get_position_embedding_ranks, s
         if device_count > 0:
             torch.cuda.set_device(args.local_rank)
             device_id = torch.device(f'cuda:{args.local_rank}')
+            os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
+            os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{args.rank}:1'
+            print("> set NVSHMEM ID to {args.rank} ...", flush=True)
         else:
             device_id = None
-
+        
         # Set to non-default stream for cudagraph capturing.
         if args.external_cuda_graph:
             torch.cuda.set_stream(torch.cuda.Stream())
@@ -335,7 +338,7 @@ def _initialize_distributed(get_embedding_ranks, get_position_embedding_ranks, s
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
         inprocess_restart.maybe_force_nccl_backend_init(device_id)
-
+    
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.
     if device_count > 0:
