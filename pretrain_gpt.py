@@ -233,6 +233,7 @@ if __name__ == "__main__":
         os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
         os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{local_rank}:1'
         torch.cuda.set_device(local_rank)
+        print_rank_0(f"--- GEMINI FIX ACTIVE: Rank {os.environ.get('NODE_RANK')} set to device {torch.cuda.current_device()} ---", flush=True) 
     except KeyError:
         print_rank_0("Warning: LOCAL_RANK not found. Assuming single-GPU or non-torchrun setup.")
     except Exception as e:
