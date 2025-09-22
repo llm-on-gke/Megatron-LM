@@ -299,6 +299,9 @@ def _initialize_distributed(get_embedding_ranks, get_position_embedding_ranks, s
     args = get_args()
 
     device_count = torch.cuda.device_count()
+    os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
+    os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{args.rank}:1'
+    print(f"> set NVSHMEM ID to {args.rank} ...", flush=True)
     if torch.distributed.is_initialized():
 
         if args.rank == 0:
@@ -317,9 +320,7 @@ def _initialize_distributed(get_embedding_ranks, get_position_embedding_ranks, s
         if device_count > 0:
             torch.cuda.set_device(args.local_rank)
             device_id = torch.device(f'cuda:{args.local_rank}')
-            os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
-            os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{args.rank}:1'
-            print("> set NVSHMEM ID to {args.rank} ...", flush=True)
+            
         else:
             device_id = None
         
