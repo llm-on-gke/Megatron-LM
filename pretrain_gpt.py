@@ -231,7 +231,7 @@ if __name__ == "__main__":
     try:
         local_rank = int(os.environ['LOCAL_RANK'])
         os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
-+       os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{local_rank}:1'
+        os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{local_rank}:1'
         torch.cuda.set_device(local_rank)
     except KeyError:
         print_rank_0("Warning: LOCAL_RANK not found. Assuming single-GPU or non-torchrun setup.")
