@@ -307,8 +307,11 @@ class MegatronFSDP(torch.nn.Module):
             expert_gradient_scaling_factor = None
         else:
             if self.ddp_config.average_in_collective:
-                # FIXME(@jianbinc): Will fix this issue based on Parallel Folding's EDP patch MR.
-                raise Exception("Not supported")
+                gradient_scaling_factor = 1.0
+                expert_gradient_scaling_factor = (
+                    self.dist_index.get_dp_group(is_expert_parallel=True).size()
+                    / self.dist_index.get_dp_group().size()
+                )
             else:
                 data_parallel_world_size = self.dist_index.get_dp_group().size()
                 gradient_scaling_factor = 1.0 / data_parallel_world_size
@@ -425,6 +428,14 @@ class MegatronFSDP(torch.nn.Module):
             for param in params:
                 bucket_id = self.param_and_grad_buffer.param_to_param_group[param]
                 ag_pipeline.wait_bucket_ready(bucket_id)
+
+        for param in params:
+            # This setting is needed to make FSDP store the weight object when used
+            # with TE's activation offloading for the first global batch.
+            param.grad_added_to_main_grad = False
+            # This setting is needed to have this attribute present after every
+            # un-shard of the FSDP params.
+            param.__fsdp_param__ = True
 
     def _register_fsdp_hooks(self, root_module):
         """Register necessary hooks for Fully Sharded Data Parallel (FSDP) execution on the model.
