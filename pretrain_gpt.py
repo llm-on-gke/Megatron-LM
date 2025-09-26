@@ -224,9 +224,12 @@ def train_valid_test_datasets_provider(train_val_test_num_samples, vp_stage=None
 
 if __name__ == "__main__":
 
+    
     # Temporary for transition to core datasets
     train_valid_test_datasets_provider.is_distributed = True
-
+    local_rank=os.environ['LOCAL_RANK']
+    os.environ['NVSHMEM_ENABLE_NIC_PE_MAPPING'] = '1'
+    os.environ['NVSHMEM_HCA_LIST'] = f'mlx5_{local_rank}:1'
     # Optionally enable inprocess restart on pretrain
     pretrain, store = inprocess_restart.maybe_wrap_for_inprocess_restart(pretrain)
 
